@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capy Typer Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦫</text></svg>">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Press Start 2P', cursive;
+            background: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 700px;
+            border: 4px solid #444;
+            background: #87CEEB;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            image-rendering: pixelated;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+        
+        #menu, #stats, #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        h1 {
+            color: #FFD700;
+            text-shadow: 3px 3px 0 #8B4513;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        
+        h2 {
+            color: #FFD700;
+            text-shadow: 2px 2px 0 #8B4513;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            margin: 8px 0;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        select, button {
+            margin-top: 5px;
+            padding: 8px 12px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            background: #8B4513;
+            color: #FFD700;
+            border: 3px solid #FFD700;
+            cursor: pointer;
+            outline: none;
+        }
+        
+        select:hover, button:hover {
+            background: #A0522D;
+        }
+        
+        button {
+            margin: 10px;
+            min-width: 150px;
+        }
+        
+        .hidden {
+            /* ensure hidden always wins over ID-based display rules */
+            display: none !important;
+        }
+        
+        #exit-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #FF0000;
+            color: white;
+            font-size: 16px;
+            border: 2px solid white;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 5;
+        }
+        
+        /* Pixel border animation */
+        @keyframes borderAnimation {
+            0% { border-color: #444; }
+            25% { border-color: #555; }
+            50% { border-color: #666; }
+            75% { border-color: #555; }
+            100% { border-color: #444; }
+        }
+        
+        #game-container {
+            animation: borderAnimation 2s infinite;
+        }
+        
+        /* Floating text */
+        .floating-text {
+            position: absolute;
+            color: white;
+            font-size: 16px;
+            text-shadow: 2px 2px 0 black;
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        /* Combo text */
+        .combo-text {
+            color: gold;
+            text-shadow: 2px 2px 0 #8B4513;
+        }
+
+        /* Centered row for company logos */
+        .logo-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;          /* space between logos */
+            margin: 20px 0;      /* vertical breathing room */
+        }
+
+        .brand-logo {
+            width: 120px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .brand-logo:hover {
+            transform: scale(1.08);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="canvas" width="800" height="700"></canvas>
+        <div id="exit-button" class="hidden">X</div>
+        
+        <div id="menu">
+            <h1>Capy Typer Adventure</h1>
+
+            <!-- Centered logo row -->
+            <div class="logo-row">
+                <a href="https://www.teddykids.nl" target="_blank" rel="noopener">
+                    <!-- lightweight inline-SVG version of Teddy Kids logo -->
+                    <img
+                        class="brand-logo"
+                        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><circle cx='60' cy='60' r='58' fill='black' stroke='%2300AEEF' stroke-width='4'/><text x='60' y='55' font-family='Verdana' font-size='28' font-weight='bold' text-anchor='middle' fill='%23FF4FA0'>TEDDY</text><text x='60' y='95' font-family='Verdana' font-size='28' font-weight='bold' text-anchor='middle' fill='%2300AEEF'>KIDS</text></svg>"
+                        alt="Teddy Kids" />
+                </a>
+                <a href="https://www.tisaschool.nl" target="_blank" rel="noopener">
+                    <!-- lightweight inline-SVG version of TISA logo -->
+                    <img
+                        class="brand-logo"
+                        src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'><rect width='120' height='120' rx='15' ry='15' fill='white' stroke='%230053C5' stroke-width='4'/><text x='60' y='70' font-family='Verdana' font-size='46' font-weight='700' text-anchor='middle' fill='%230053C5'>TISA</text></svg>"
+                        alt="TISA" />
+                </a>
+            </div>
+
+            <label>
+                Mode: 
+                <select id="mode-select">
+                    <option value="progressive">Progressive</option>
+                    <option value="select">Select Level</option>
+                </select>
+            </label>
+            <label id="level-select-label" class="hidden">
+                Level: 
+                <select id="level-select"></select>
+            </label>
+            <label>
+                Seeds per Level: 
+                <select id="seeds-select">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="30" selected>30</option>
+                    <option value="40">40</option>
+                    <option value="50">50</option>
+                    <option value="60">60</option>
+                    <option value="70">70</option>
+                    <option value="80">80</option>
+                    <option value="90">90</option>
+                    <option value="100">100</option>
+                </select>
+            </label>
+            <label>
+                Capy Color: 
+                <select id="color-select">
+                    <option value="brown">Brown</option>
+                    <option value="gold">Gold</option>
+                    <option value="red">Red</option>
+                </select>
+            </label>
+            <!-- Sound toggle restored to vertical list -->
+            <label>
+                Sound:
+                <input type="checkbox" id="sound-toggle" checked>
+            </label>
+            <button id="start-btn">Start Game</button>
+            <button id="quick-play-btn">Quick Play</button>
+            <button id="view-stats-btn">View Stats</button>
+            <p style="font-size: 8px; margin-top: 20px;">Note: Best played on desktop/laptop with keyboard.</p>
+        </div>
+        
+        <div id="stats" class="hidden">
+            <h2>Stats</h2>
+            <div id="stats-content" style="font-size: 10px; line-height: 1.5;"></div>
+            <button id="back-to-menu-stats">Back</button>
+            <button id="reset-stats">Reset Stats</button>
+        </div>
+        
+        <div id="game-over" class="hidden">
+            <h2 id="game-over-title">Game Over</h2>
+            <p id="final-score" style="font-size: 12px;"></p>
+            <button id="continue-btn" class="hidden">Continue</button>
+            <button id="restart-btn">Restart</button>
+            <button id="back-to-menu">Back to Menu</button>
+        </div>
+    </div>
+
+    <script>
+        console.log("Page loaded, checking initial state");
+        
+        /* ------------------------------------------------------------------
+           Font Fallback Detection
+           ------------------------------------------------------------------
+           Sets a flag once web fonts have finished loading so we can switch
+           to a monospace fallback if the custom pixel font fails to load.
+        ------------------------------------------------------------------ */
+        let fontLoaded = false;
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready
+                .then(() => { fontLoaded = true; })
+                .catch(() => { fontLoaded = false; });
+        } else {
+            // Older browsers: assume font is available
+            fontLoaded = true;
+        }
+
+        // Constants
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 700;
+        const GRAVITY = 0.5;
+        const MAX_KEYPRESSES = 100; // Limit for keypresses array to prevent memory leak
+        const CENTER_X = CANVAS_WIDTH / 2; // Center position for capybara
+        const GROUND_Y = CANVAS_HEIGHT - 100; // Ground position for capybara
+        const COMBO_DECAY_TIME = 1500; // Time in ms before combo resets if no new hits
+        
+        // Level blocks - progressive difficulty
+        const LEVEL_BLOCKS = [
+            'QWERT',           // Level 1: Top row left
+            'ASDFG',           // Level 2: Home row left
+            'ZXCVB',           // Level 3: Bottom row left
+            'YUIOP',           // Level 4: Top row right
+            'HJKL;',           // Level 5: Home row right
+            'NM,./',           // Level 6: Bottom row right
+            '1234567890',      // Level 7: Numbers
+            'QWERTYUIOP',      // Level 8: Top row
+            'ASDFGHJKL;',      // Level 9: Home row
+            'ZXCVBNM,./',      // Level 10: Bottom row
+            'QWERTASDFGZXCVB', // Level 11: Left hand
+            'YUIOPHJKL;NM,./', // Level 12: Right hand
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ', // Level 13: All letters
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', // Level 14: Letters + numbers
+            '!@#$%^&*()_+-={}[]|\\:;"\'<>,.?/', // Level 15: Symbols
+            '~!@#$%^&*()_+{}|:"<>?', // Level 16: Shift symbols
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-={}[]|\\:;"\'<>,.?/', // Level 17: Everything
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-={}[]|\\:;"\'<>,.?/', // Level 18: Everything + speed
+            'TH ER IN ON AT ND ST ES EN OF TE', // Level 19: 2-letter combos
+            'THE AND ING ENT ION TIO FOR NDE HAS NCE', // Level 20: 3-letter combos
+            'A1B2C3D4E5F6G7H8I9J0', // Level 21: Letters + numbers mixed
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-={}[]|\\:;"\'<>,.?/', // Level 22: Whole keyboard
+        ];
+        
+        // Bad guy prototypes – labels will be generated per-spawn (phase-2)
+        const BAD_GUYS = [
+            { type: 'snail',  speed: 1 },
+            { type: 'croc',   speed: 2 },
+            { type: 'jaguar', speed: 4 },
+            { type: 'eagle',  speed: 5, direction: 'any' }
+        ];
+
+        // Game State
+        let ctx = document.getElementById('canvas').getContext('2d');
+        console.log("Menu element:", document.getElementById('menu'));
+        console.log("Game-over element:", document.getElementById('game-over'));
+        
+        let gameState = {
+            currentLevel: 1,
+            mode: 'progressive',
+            seedsPerLevel: 30,
+            capyColor: 'brown',
+            soundEnabled: true,
+            fallSpeedMultiplier: 1.0, // Start at normal speed
+            baseSpeed: 1.6, // Base falling speed (doubled for faster gameplay)
+            backgroundSeed: Math.random(), // Random seed for background generation
+            player: {
+                x: CENTER_X,
+                y: GROUND_Y,
+                vy: 0,
+                targetX: null,
+                targetY: null,
+                isJumping: false,
+                scale: 1,
+                health: 5,
+                score: 0,
+                shake: { x: 0, y: 0, intensity: 0, duration: 0 } // Capybara shake
+            },
+            seeds: [],
+            badGuys: [],
+            particles: [],
+            messages: [],
+            combo: 0,
+            maxCombo: 0,
+            progress: 0,
+            unlockedLevels: 1,
+            highScores: {},
+            lastCompletedLevel: 0, /* NEW – remember last win */
+            stats: { 
+                wpm: 0, 
+                accuracy: { correct: 0, total: 0 },
+                seedsEaten: 0,
+                badGuysStomped: 0
+            },
+            isPaused: false,
+            isGameOver: false,
+            keysPressed: [],
+            startTime: 0,
+            shake: {
+                intensity: 0,
+                duration: 0,
+                x: 0,
+                y: 0
+            },
+            // New properties for game architecture redesign
+            levelData: null,
+            typingBuffer: {
+                current: '',
+                lastKeyTime: 0,
+                activeTarget: null
+            },
+            /* Timer (ms) before combo resets; handled each frame */
+            comboDecayTime: 0,
+            nextSpawnTime: 0,
+            spawnDelay: 2000 // 2 seconds between spawns
+        };
+
+        // LocalStorage Helpers
+        function loadProgress() {
+            console.log("loadProgress called");
+            const saved = localStorage.getItem('capyTyper');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    gameState.unlockedLevels = data.unlockedLevels || 1;
+                    gameState.highScores = data.highScores || {};
+                    gameState.lastCompletedLevel = data.lastCompletedLevel || 0;
+                    gameState.stats = data.stats || {
+                        wpm: 0,
+                        accuracy: { correct: 0, total: 0 },
+                        seedsEaten: 0,
+                        badGuysStomped: 0
+                    };
+                    
+                    // Populate level select up to unlocked
+                    const levelSelect = document.getElementById('level-select');
+                    levelSelect.innerHTML = '';
+                    for (let i = 1; i <= Math.min(gameState.unlockedLevels, LEVEL_BLOCKS.length); i++) {
+                        levelSelect.innerHTML += `<option value="${i}">${i}</option>`;
+                    }
+                } catch (e) {
+                    console.error("Error loading saved data:", e);
+                    resetStats();
+                }
+            } else {
+                resetStats();
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('capyTyper', JSON.stringify({
+                unlockedLevels: gameState.unlockedLevels,
+                highScores: gameState.highScores,
+                stats: gameState.stats,
+                lastCompletedLevel: gameState.lastCompletedLevel || 0
+            }));
+        }
+
+        function resetStats() {
+            console.log("resetStats called");
+            gameState.stats = {
+                wpm: 0,
+                accuracy: { correct: 0, total: 0 },
+                seedsEaten: 0,
+                badGuysStomped: 0
+            };
+            gameState.maxCombo = 0;
+            gameState.combo = 0;
+            gameState.highScores = {};
+            gameState.unlockedLevels = 1;
+            gameState.progress = 0;
+            gameState.keysPressed = [];
+            gameState.fallSpeedMultiplier = 1.0;
+            saveProgress();
+        }
+
+        // Asset Placeholders
+        function loadAssets() {
+            console.log("loadAssets called");
+            // For now, we'll use simple shapes
+            // In a full implementation, you'd load images here
+        }
+
+        // Generate random labels for bad guys using next level's keys
+        function generateBadGuyLabel(type, currentLevel) {
+            // Get keys from NEXT level for extra challenge
+            const nextLevel = Math.min(currentLevel + 1, LEVEL_BLOCKS.length);
+            const nextLevelBlock = LEVEL_BLOCKS[nextLevel - 1];
+            
+            // Determine label length based on enemy type and level
+            let labelLength;
+            if (type === 'snail') {
+                // Snails: 1-2 characters
+                labelLength = currentLevel <= 5 ? 1 : 2;
+            } else if (type === 'croc') {
+                // Crocs: 2-3 characters
+                labelLength = currentLevel <= 8 ? 2 : 3;
+            } else if (type === 'jaguar') {
+                // Jaguars: 3-4 characters
+                labelLength = currentLevel <= 10 ? 3 : 4;
+            } else if (type === 'eagle') {
+                // Eagles: special characters or 1-2 chars
+                if (currentLevel >= 15) {
+                    // Use special characters for eagles in later levels
+                    const specials = '!@#$%^&*()'.split('');
+                    return specials[Math.floor(Math.random() * specials.length)];
+                }
+                labelLength = currentLevel <= 12 ? 1 : 2;
+            }
+            
+            // Generate random label from next level's keys
+            let label = '';
+            for (let i = 0; i < labelLength; i++) {
+                if (nextLevelBlock && typeof nextLevelBlock === 'string') {
+                    // Handle special level types
+                    if (nextLevelBlock.includes(' ')) {
+                        // Combo levels - just use first letters
+                        const combos = nextLevelBlock.split(' ');
+                        const combo = combos[Math.floor(Math.random() * combos.length)];
+                        label += combo[0].toUpperCase();
+                    } else {
+                        // Regular level - pick random character
+                        label += nextLevelBlock[Math.floor(Math.random() * nextLevelBlock.length)].toUpperCase();
+                    }
+                } else {
+                    // Fallback
+                    label += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)];
+                }
+            }
+            
+            return label;
+        }
+
+        // Level Data Preloading
+        function generateLevelData(level, seedCount) {
+            console.log(`Generating level data for level ${level}, seeds: ${seedCount}`);
+            const levelBlock = LEVEL_BLOCKS[level - 1];
+            const data = {
+                seeds: [],
+                badGuys: [],
+                specials: [],
+                currentSeedIndex: 0,
+                currentBadGuyIndex: 0,
+                currentSpecialIndex: 0
+            };
+            
+            // Generate all seeds upfront
+            for (let i = 0; i < seedCount; i++) {
+                data.seeds.push({
+                    key: getKeyFromBlock(levelBlock),
+                    spawnTime: i * 2000, // Every 2 seconds
+                    spawned: false
+                });
+            }
+            
+            // Generate bad guys (less frequent)
+            const badGuyCount = Math.min(Math.floor(seedCount / 5), 10);
+            for (let i = 0; i < badGuyCount; i++) {
+                const badGuyType = selectBadGuyType(level);
+                data.badGuys.push({
+                    type: badGuyType.type,
+                    label: generateBadGuyLabel(badGuyType.type, level),
+                    speed: badGuyType.speed,
+                    direction: badGuyType.direction,
+                    spawnTime: 5000 + i * 8000, // First one at 5s, then every 8s
+                    spawned: false
+                });
+            }
+            
+            // Generate specials (rare)
+            const specialCount = Math.floor(seedCount / 10);
+            for (let i = 0; i < specialCount; i++) {
+                data.specials.push({
+                    key: getSpecialSymbol(),
+                    spawnTime: 10000 + i * 15000, // First one at 10s, then every 15s
+                    spawned: false
+                });
+            }
+            
+            return data;
+        }
+        
+        function getKeyFromBlock(block) {
+            if (!block) return 'A'; // Fallback to capital
+            
+            // Handle different level types
+            if (block === 'random' || block === 'all') {
+                return getRandomKey().toUpperCase();
+            } else if (block.includes(' ')) {
+                // For combo levels (19-20), pick a combo
+                const combos = block.split(' ');
+                return combos[Math.floor(Math.random() * combos.length)].toUpperCase();
+            } else {
+                // Regular level, pick from the block
+                return block[Math.floor(Math.random() * block.length)].toUpperCase();
+            }
+        }
+        
+        function selectBadGuyType(level) {
+            // Select appropriate bad guy type based on level
+            if (level <= 3) {
+                // Only snails in early levels
+                return BAD_GUYS[0];
+            } else if (level <= 7) {
+                // Snails and crocs
+                return BAD_GUYS[Math.floor(Math.random() * 2)];
+            } else if (level <= 12) {
+                // No eagles yet
+                return BAD_GUYS[Math.floor(Math.random() * 3)];
+            } else {
+                // All types
+                return BAD_GUYS[Math.floor(Math.random() * BAD_GUYS.length)];
+            }
+        }
+
+        // Particle System
+        function createParticles(x, y, color, count = 10, size = 5) {
+            for (let i = 0; i < count; i++) {
+                gameState.particles.push({
+                    x, 
+                    y,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 1) * 5,
+                    size: Math.random() * size + 2,
+                    color,
+                    life: 1,
+                    decay: 0.01 + Math.random() * 0.02
+                });
+            }
+        }
+
+        function updateParticles() {
+            gameState.particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // Gravity
+                p.life -= p.decay;
+            });
+            
+            // Remove dead particles
+            gameState.particles = gameState.particles.filter(p => p.life > 0);
+        }
+
+        function drawParticles() {
+            gameState.particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        // Message System
+        function createMessage(text, x, y, color = 'white', size = 16, duration = 2, rise = true) {
+            gameState.messages.push({
+                text,
+                x,
+                y,
+                color,
+                size,
+                life: 1,
+                decay: 1 / (60 * duration), // 60fps * seconds
+                rise
+            });
+        }
+
+        function updateMessages() {
+            gameState.messages.forEach(m => {
+                if (m.rise) m.y -= 1;
+                m.life -= m.decay;
+            });
+            
+            // Remove dead messages
+            gameState.messages = gameState.messages.filter(m => m.life > 0);
+        }
+
+        function drawMessages() {
+            gameState.messages.forEach(m => {
+                ctx.globalAlpha = m.life;
+                ctx.fillStyle = m.color;
+                ctx.font = fontLoaded ? `${m.size}px "Press Start 2P"` : `${m.size}px monospace`;
+                ctx.textAlign = 'center';
+                ctx.fillText(m.text, m.x, m.y);
+            });
+            ctx.globalAlpha = 1;
+            ctx.textAlign = 'left';
+        }
+
+        // Capybara Shake (replacing Screen Shake)
+        function shakeCapybara(intensity = 5, duration = 0.3) {
+            gameState.player.shake.intensity = intensity;
+            gameState.player.shake.duration = duration * 60; // 60fps * seconds
+        }
+
+        // Game Loop
+        let lastFrameTime = 0;
+        function gameLoop(timestamp) {
+            if (gameState.isPaused || gameState.isGameOver) return;
+            
+            // Calculate delta time for smooth animations
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+            
+            // Request next frame first to avoid lag if processing takes too long
+            requestAnimationFrame(gameLoop);
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // Draw background
+            drawBackground();
+            
+            // Update & Draw entities
+            updateParticles();
+            updateMessages();
+            updatePlayer();
+            
+            // Check for new spawns from preloaded level data
+            updateSpawns();
+            
+            // Update existing entities
+            updateSeeds();
+            updateBadGuys();
+            
+            // Draw everything
+            drawParticles();
+            drawPlayer();
+            drawSeeds();
+            drawBadGuys();
+            drawMessages();
+            
+            // Draw UI
+            drawUI();
+            
+            // Check win/loss
+            if (gameState.progress >= gameState.seedsPerLevel) {
+                levelComplete();
+            } else if (gameState.player.health <= 0) {
+                gameOver();
+            }
+            
+            // Clear typing buffer if too old
+            if (gameState.typingBuffer.current && 
+                Date.now() - gameState.typingBuffer.lastKeyTime > 1000) {
+                gameState.typingBuffer.current = '';
+            }
+            
+            // Handle combo decay
+            if (gameState.comboDecayTime > 0) {
+                gameState.comboDecayTime -= deltaTime;
+                if (gameState.comboDecayTime <= 0) {
+                    gameState.combo = 0;
+                    gameState.comboDecayTime = 0;
+                }
+            }
+        }
+
+        // Spawn Control - from preloaded level data
+        function updateSpawns() {
+            const currentTime = Date.now() - gameState.startTime;
+            const levelData = gameState.levelData;
+            
+            // Only spawn if there are no active targets (one at a time)
+            if (getActiveTargetCount() === 0 && currentTime >= gameState.nextSpawnTime) {
+                let spawned = false;
+                
+                // Try to spawn a seed
+                if (levelData.currentSeedIndex < levelData.seeds.length) {
+                    const seed = levelData.seeds[levelData.currentSeedIndex];
+                    if (!seed.spawned) {
+                        spawnSeed(seed.key, seed.special);
+                        seed.spawned = true;
+                        levelData.currentSeedIndex++;
+                        spawned = true;
+                    }
+                }
+                
+                // Try to spawn a bad guy (if no seed was spawned)
+                if (!spawned && levelData.currentBadGuyIndex < levelData.badGuys.length) {
+                    const badGuy = levelData.badGuys[levelData.currentBadGuyIndex];
+                    if (!badGuy.spawned && currentTime >= badGuy.spawnTime) {
+                        spawnBadGuy(badGuy);
+                        badGuy.spawned = true;
+                        levelData.currentBadGuyIndex++;
+                        spawned = true;
+                    }
+                }
+                
+                // Try to spawn a special (if nothing else was spawned)
+                if (!spawned && levelData.currentSpecialIndex < levelData.specials.length) {
+                    const special = levelData.specials[levelData.currentSpecialIndex];
+                    if (!special.spawned && currentTime >= special.spawnTime) {
+                        spawnSeed(special.key, true); // Specials are always special seeds
+                        special.spawned = true;
+                        levelData.currentSpecialIndex++;
+                        spawned = true;
+                    }
+                }
+                
+                // Set next spawn time
+                if (spawned) {
+                    gameState.nextSpawnTime = currentTime + gameState.spawnDelay;
+                }
+            }
+        }
+        
+        function getActiveTargetCount() {
+            return gameState.seeds.length + gameState.badGuys.length;
+        }
+
+        // Drawing Functions
+        function drawBackground() {
+            // Use seed for consistent randomness within a level
+            const seed = gameState.backgroundSeed;
+            
+            // Sky gradient with variation
+            const gradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+            const hue = 180 + seed * 40; // 180-220 (cyan to blue range)
+            gradient.addColorStop(0, `hsl(${hue}, 70%, 70%)`);
+            gradient.addColorStop(1, `hsl(${hue + 20}, 60%, 50%)`);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            
+            // Ground with slight color variation
+            const groundHue = 110 + seed * 20; // Green range
+            ctx.fillStyle = `hsl(${groundHue}, 60%, 35%)`;
+            ctx.fillRect(0, CANVAS_HEIGHT - 50, CANVAS_WIDTH, 50);
+            
+            // Sun at random position
+            const sunX = 100 + seed * 600; // 100-700
+            const sunY = 50 + seed * 100; // 50-150
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 2-4 random clouds
+            const numClouds = 2 + Math.floor(seed * 3);
+            for (let i = 0; i < numClouds; i++) {
+                const cloudSeed = (seed * (i + 1)) % 1;
+                const cloudX = cloudSeed * CANVAS_WIDTH;
+                const cloudY = 50 + cloudSeed * 150;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                ctx.arc(cloudX, cloudY, 25 + cloudSeed * 10, 0, Math.PI * 2);
+                ctx.arc(cloudX + 30, cloudY - 10, 20 + cloudSeed * 10, 0, Math.PI * 2);
+                ctx.arc(cloudX + 60, cloudY, 15 + cloudSeed * 10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            // Apply capybara shake
+            ctx.translate(
+                gameState.player.x + gameState.player.shake.x, 
+                gameState.player.y + gameState.player.shake.y
+            );
+            
+            // Apply breathing animation
+            const breathScale = 1 + Math.sin(Date.now() / 500) * 0.03;
+            ctx.scale(gameState.player.scale * breathScale, gameState.player.scale / breathScale);
+            
+            // Draw capybara (placeholder rectangle with details)
+            if (gameState.player.isJumping) {
+                // Jumping capybara
+                ctx.fillStyle = getCapyColor();
+                ctx.fillRect(-20, -30, 40, 30);
+                
+                // Head
+                ctx.fillRect(-15, -40, 30, 15);
+                
+                // Ears
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(-15, -45, 8, 8);
+                ctx.fillRect(7, -45, 8, 8);
+                
+                // Eyes
+                ctx.fillStyle = 'black';
+                ctx.fillRect(-10, -35, 5, 5);
+                ctx.fillRect(5, -35, 5, 5);
+                
+                // Mouth (open for jumping)
+                ctx.fillRect(-5, -25, 10, 5);
+                
+                // Paws up
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(-18, -20, 8, 5);
+                ctx.fillRect(10, -20, 8, 5);
+            } else {
+                // Standing capybara
+                ctx.fillStyle = getCapyColor();
+                ctx.fillRect(-20, -20, 40, 20);
+                
+                // Head
+                ctx.fillRect(-15, -35, 30, 20);
+                
+                // Ears
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(-15, -40, 8, 8);
+                ctx.fillRect(7, -40, 8, 8);
+                
+                // Eyes
+                ctx.fillStyle = 'black';
+                ctx.fillRect(-10, -30, 5, 5);
+                ctx.fillRect(5, -30, 5, 5);
+                
+                // Mouth
+                ctx.fillRect(-5, -20, 10, 3);
+                
+                // Paws
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(-18, -5, 8, 5);
+                ctx.fillRect(10, -5, 8, 5);
+            }
+            
+            ctx.restore();
+        }
+
+        function getCapyColor() {
+            switch(gameState.capyColor) {
+                case 'gold': return '#DAA520';
+                case 'red': return '#A52A2A';
+                default: return '#8B4513'; // brown
+            }
+        }
+
+        function drawSeeds() {
+            gameState.seeds.forEach(seed => {
+                ctx.save();
+                ctx.translate(seed.x, seed.y);
+                
+                // Apply subtle wobble instead of rotation
+                const wobble = Math.sin(Date.now() / 200 + seed.x) * 0.1;
+                ctx.scale(1 + wobble, 1 - wobble);
+                
+                // Draw seed (32x32 with key)
+                if (seed.special) {
+                    // Special seed (glowing)
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#FFD700';
+                } else {
+                    ctx.fillStyle = '#8B4513';
+                }
+                
+                // Draw seed body (watermelon slice)
+                ctx.beginPath();
+                ctx.arc(0, 0, 16, 0, Math.PI);
+                ctx.fill();
+                
+                // Add details
+                if (seed.special) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.beginPath();
+                    ctx.arc(-5, -5, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw key text
+                ctx.fillStyle = 'white';
+                ctx.font = fontLoaded ? '20px "Press Start 2P"' : '20px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(seed.key, 0, 0);
+                
+                // Highlight if typing buffer matches
+                if (gameState.typingBuffer.current && 
+                    seed.key.startsWith(gameState.typingBuffer.current)) {
+                    ctx.strokeStyle = 'lime';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 22, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+                
+                ctx.restore();
+            });
+        }
+
+        function drawBadGuys() {
+            gameState.badGuys.forEach(bg => {
+                ctx.save();
+                ctx.translate(bg.x, bg.y);
+                
+                // Draw based on type
+                switch(bg.type) {
+                    case 'snail':
+                        // Shell
+                        ctx.fillStyle = '#A52A2A';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 15, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Body
+                        ctx.fillStyle = '#D2691E';
+                        ctx.beginPath();
+                        ctx.arc(15, 5, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Eyes
+                        ctx.fillStyle = 'black';
+                        ctx.beginPath();
+                        ctx.arc(20, 0, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                        
+                    case 'croc':
+                        // Body
+                        ctx.fillStyle = '#006400';
+                        ctx.fillRect(-20, -10, 40, 20);
+                        
+                        // Jaws
+                        ctx.beginPath();
+                        ctx.moveTo(20, 0);
+                        ctx.lineTo(35, -10);
+                        ctx.lineTo(35, 10);
+                        ctx.fill();
+                        
+                        // Eye
+                        ctx.fillStyle = 'yellow';
+                        ctx.beginPath();
+                        ctx.arc(15, -5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                        
+                    case 'jaguar':
+                        // Body
+                        ctx.fillStyle = '#FFA500';
+                        ctx.fillRect(-20, -15, 40, 30);
+                        
+                        // Spots
+                        ctx.fillStyle = 'black';
+                        ctx.beginPath();
+                        ctx.arc(-10, -5, 3, 0, Math.PI * 2);
+                        ctx.arc(0, 5, 3, 0, Math.PI * 2);
+                        ctx.arc(10, -5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Head
+                        ctx.fillStyle = '#FFA500';
+                        ctx.beginPath();
+                        ctx.arc(20, 0, 10, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Eye
+                        ctx.fillStyle = 'green';
+                        ctx.beginPath();
+                        ctx.arc(25, -3, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                        
+                    case 'eagle':
+                        // Wings
+                        ctx.fillStyle = '#8B4513';
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(-20, -15);
+                        ctx.lineTo(-10, 0);
+                        ctx.lineTo(-20, 15);
+                        ctx.fill();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(20, -15);
+                        ctx.lineTo(10, 0);
+                        ctx.lineTo(20, 15);
+                        ctx.fill();
+                        
+                        // Body
+                        ctx.fillStyle = '#A0522D';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Head
+                        ctx.fillStyle = 'white';
+                        ctx.beginPath();
+                        ctx.arc(0, -15, 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Beak
+                        ctx.fillStyle = 'yellow';
+                        ctx.beginPath();
+                        ctx.moveTo(0, -15);
+                        ctx.lineTo(10, -10);
+                        ctx.lineTo(0, -5);
+                        ctx.fill();
+                        break;
+                        
+                    default:
+                        // Generic enemy
+                        ctx.fillStyle = 'red';
+                        ctx.fillRect(-15, -15, 30, 30);
+                }
+                
+                // Draw label with typing progress
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Add white background for better visibility
+                ctx.fillStyle = 'white';
+                ctx.fillRect(-bg.label.length * 8, -40, bg.label.length * 16, 20);
+                
+                // Check if typing buffer matches this label
+                if (gameState.typingBuffer.current && 
+                    bg.label.startsWith(gameState.typingBuffer.current)) {
+                    
+                    // Draw matched part in green
+                    ctx.font = fontLoaded ? '16px "Press Start 2P"' : '16px monospace';
+                    ctx.fillStyle = 'lime';
+                    ctx.fillText(
+                        gameState.typingBuffer.current, 
+                        0, 
+                        -30
+                    );
+                    
+                    // Draw remaining part in black
+                    ctx.fillStyle = 'black';
+                    ctx.fillText(
+                        bg.label.substring(gameState.typingBuffer.current.length), 
+                        gameState.typingBuffer.current.length * 8, // Approximate width
+                        -30
+                    );
+                    
+                    // Draw highlight
+                    ctx.strokeStyle = 'lime';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                } else {
+                    // Draw normal label
+                    ctx.fillStyle = 'black';
+                    ctx.font = fontLoaded ? '16px "Press Start 2P"' : '16px monospace';
+                    ctx.fillText(bg.label, 0, -30);
+                }
+                
+                ctx.restore();
+            });
+        }
+
+        function drawUI() {
+            // Health hearts (5 lives)
+            for (let i = 0; i < 5; i++) {
+                ctx.fillStyle = i < Math.max(0, gameState.player.health) ? 'red' : 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(30 + i*30, 30, 12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Score
+            ctx.fillStyle = 'white';
+            ctx.font = fontLoaded ? '16px "Press Start 2P"' : '16px monospace';
+            ctx.fillText(`Score: ${gameState.player.score}`, 20, 70);
+            
+            // Level
+            ctx.fillText(`Level: ${gameState.currentLevel}`, 20, 100);
+            
+            // Combo
+            if (gameState.combo > 1) {
+                ctx.fillStyle = 'gold';
+                ctx.font = fontLoaded ? 
+                    `${16 + Math.min(gameState.combo, 10)}px "Press Start 2P"` : 
+                    `${16 + Math.min(gameState.combo, 10)}px monospace`;
+                ctx.fillText(`Combo: ${gameState.combo}x`, 20, 130);
+                
+                // Draw combo decay bar
+                if (gameState.comboDecayTime > 0) {
+                    const decayPercent = gameState.comboDecayTime / COMBO_DECAY_TIME;
+                    ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+                    ctx.fillRect(20, 140, 100 * decayPercent, 5);
+                }
+            }
+            
+            // Progress bar
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(20, 150, 200, 20);
+            ctx.fillStyle = 'rgba(0,255,0,0.7)';
+            ctx.fillRect(20, 150, (gameState.progress / gameState.seedsPerLevel) * 200, 20);
+            ctx.strokeStyle = 'white';
+            ctx.strokeRect(20, 150, 200, 20);
+            
+            // Speed indicator
+            const speedPercent = Math.round(gameState.fallSpeedMultiplier * 100);
+            let speedColor = 'white';
+            if (speedPercent > 120) speedColor = 'lime';
+            else if (speedPercent < 80) speedColor = 'red';
+            else speedColor = 'yellow';
+
+            ctx.fillStyle = speedColor;
+            ctx.font = fontLoaded ? '14px "Press Start 2P"' : '14px monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(`Speed: ${speedPercent}%`, CANVAS_WIDTH - 20, 30);
+            ctx.textAlign = 'left';
+
+            // Speed change indicator arrows
+            if (gameState.fallSpeedMultiplier > 1.01) {
+                ctx.fillText('↑', CANVAS_WIDTH - 220, 30);
+            } else if (gameState.fallSpeedMultiplier < 0.99) {
+                ctx.fillText('↓', CANVAS_WIDTH - 220, 30);
+            }
+            
+            // Typing buffer display
+            if (gameState.typingBuffer.current) {
+                ctx.fillStyle = 'white';
+                ctx.font = fontLoaded ? '16px "Press Start 2P"' : '16px monospace';
+                ctx.fillText(`Typing: ${gameState.typingBuffer.current}`, 20, 230);
+            }
+            
+            // Next keys preview (from preloaded data)
+            if (gameState.levelData) {
+                ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                ctx.font = fontLoaded ? '12px "Press Start 2P"' : '12px monospace';
+                ctx.fillText('Next keys:', 20, 190);
+                
+                // Show next 5 keys from level data
+                let previewText = '';
+                const startIdx = gameState.levelData.currentSeedIndex;
+                const endIdx = Math.min(startIdx + 5, gameState.levelData.seeds.length);
+                
+                for (let i = startIdx; i < endIdx; i++) {
+                    if (gameState.levelData.seeds[i]) {
+                        previewText += gameState.levelData.seeds[i].key + ' ';
+                    }
+                }
+                
+                ctx.fillText(previewText || 'None left', 20, 210);
+            }
+        }
+
+        // Update Functions
+        function updatePlayer() {
+            // Apply gravity
+            gameState.player.vy += GRAVITY;
+            gameState.player.y += gameState.player.vy;
+            
+            // Ground collision
+            if (gameState.player.y > GROUND_Y) {
+                gameState.player.y = GROUND_Y;
+                gameState.player.vy = 0;
+                gameState.player.isJumping = false;
+            }
+            
+            // Smooth movement toward target
+            if (gameState.player.targetX !== null) {
+                const dx = gameState.player.targetX - gameState.player.x;
+                if (Math.abs(dx) < 1) {
+                    gameState.player.x = gameState.player.targetX;
+                    gameState.player.targetX = null;
+                    
+                    // Return to center after reaching target
+                    if (gameState.player.x !== CENTER_X) {
+                        gameState.player.targetX = CENTER_X;
+                    }
+                } else {
+                    gameState.player.x += dx * 0.2;
+                }
+            }
+            
+            // Breathing animation
+            gameState.player.scale = 1 + Math.sin(Date.now() / 500) * 0.05;
+            
+            // Update capybara shake
+            if (gameState.player.shake.duration > 0) {
+                gameState.player.shake.x = (Math.random() - 0.5) * gameState.player.shake.intensity * 2;
+                gameState.player.shake.y = (Math.random() - 0.5) * gameState.player.shake.intensity;
+                gameState.player.shake.duration--;
+            } else {
+                gameState.player.shake.x = 0;
+                gameState.player.shake.y = 0;
+            }
+        }
+
+        function updateSeeds() {
+            // Calculate dynamic fall speed
+            const baseSpeed = gameState.currentLevel === 18 ? 2 : gameState.baseSpeed;
+            const fallSpeed = baseSpeed * gameState.fallSpeedMultiplier;
+            
+            // Move seeds down with dynamic speed
+            gameState.seeds.forEach(seed => seed.y += fallSpeed);
+            
+            // Remove off-screen seeds and penalize
+            gameState.seeds = gameState.seeds.filter(seed => {
+                if (seed.y > CANVAS_HEIGHT) {
+                    // Miss: lose accuracy
+                    gameState.stats.accuracy.total++;
+                    gameState.combo = 0; // Reset combo
+                    gameState.comboDecayTime = 0; // Reset combo timer
+                    createMessage('Miss!', seed.x, CANVAS_HEIGHT - 50, 'red');
+                    gameState.typingBuffer.current = ''; // Clear typing buffer
+                    
+                    // Decrease speed on miss
+                    gameState.fallSpeedMultiplier = Math.max(0.5, gameState.fallSpeedMultiplier * 0.95);
+                    createMessage('Speed ↓', CANVAS_WIDTH - 100, 50, 'red', 12, 1);
+                    
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        /* ------------------------------------------------------------------
+           Position Overlap Prevention Helper
+           Ensures new entities do not spawn too close to existing ones.
+        ------------------------------------------------------------------ */
+        function isPositionClear(x, y, minDistance = 50) {
+            // Check seeds
+            for (const s of gameState.seeds) {
+                const dx = s.x - x;
+                const dy = s.y - y;
+                if (Math.hypot(dx, dy) < minDistance) return false;
+            }
+            // Check bad guys
+            for (const bg of gameState.badGuys) {
+                const dx = bg.x - x;
+                const dy = bg.y - y;
+                if (Math.hypot(dx, dy) < minDistance) return false;
+            }
+            return true;
+        }
+
+        function spawnSeed(key, isSpecial = false) {
+            // Attempt to find a clear position (max 10 tries)
+            let tries = 0;
+            let sx, sy;
+            do {
+                sx = 50 + Math.random() * (CANVAS_WIDTH - 100);
+                sy = -20; // always spawn above
+                tries++;
+            } while (!isPositionClear(sx, sy) && tries < 10);
+
+            if (tries < 10) {
+                gameState.seeds.push({
+                    x: sx,
+                    y: sy,
+                    key,
+                    special: isSpecial
+                });
+            }
+        }
+
+        function updateBadGuys() {
+            // Update positions
+            gameState.badGuys.forEach(bg => {
+                // Move based on type/direction
+                if (bg.direction === 'any' && bg.type === 'eagle') {
+                    // Dive logic: towards player
+                    bg.x += (bg.x > gameState.player.x) ? -bg.speed : bg.speed;
+                    bg.y += (bg.y < gameState.player.y) ? bg.speed : -bg.speed;
+                } else {
+                    bg.x -= bg.speed; // From right to left
+                }
+            });
+            
+            // Single collision detection pass
+            gameState.badGuys = gameState.badGuys.filter(bg => {
+                // Check collision with player
+                if (Math.abs(bg.x - gameState.player.x) < 30 && Math.abs(bg.y - gameState.player.y) < 30) {
+                    gameState.player.health = Math.max(0, gameState.player.health - 1);
+                    playSound('miss');
+                    shakeCapybara(10, 0.5);
+                    createMessage('-1 Health!', bg.x, bg.y - 30, 'red', 20);
+                    createParticles(bg.x, bg.y, 'red', 20);
+                    gameState.typingBuffer.current = ''; // Clear typing buffer
+                    
+                    // Decrease speed on collision
+                    gameState.fallSpeedMultiplier = Math.max(0.5, gameState.fallSpeedMultiplier * 0.95);
+                    createMessage('Speed ↓', CANVAS_WIDTH - 100, 50, 'red', 12, 1);
+                    
+                    return false; // Remove this bad guy
+                }
+                
+                // Remove if off-screen
+                if (bg.x < -50) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        function spawnBadGuy(badGuy) {
+            // Attempt to find a clear position (max 10 tries)
+            let tries = 0;
+            let bx, by;
+            do {
+                bx = CANVAS_WIDTH + 50; // Start from right
+                by = badGuy.type === 'eagle' ? Math.random() * CANVAS_HEIGHT / 2 : GROUND_Y; // Ground or air
+                tries++;
+            } while (!isPositionClear(bx, by) && tries < 10);
+
+            if (tries < 10) {
+                gameState.badGuys.push({
+                    x: bx,
+                    y: by,
+                    type: badGuy.type,
+                    speed: badGuy.speed,
+                    label: badGuy.label,
+                    direction: badGuy.direction
+                });
+            }
+        }
+
+        // Typing Handler with Buffer System
+        document.addEventListener('keydown', (e) => {
+            if (gameState.isGameOver || gameState.isPaused) {
+                // Allow escape to toggle pause
+                if (e.key === 'Escape') {
+                    togglePause();
+                }
+                return;
+            }
+            
+            // Filter out modifier keys and special keys
+            const ignoredKeys = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 
+                                'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+                                'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'];
+
+            if (ignoredKeys.includes(e.key)) {
+                return; // Ignore these keys
+            }
+            
+            // Track for WPM (limit array size to prevent memory leak)
+            gameState.keysPressed.push({
+                key: e.key,
+                time: Date.now()
+            });
+            
+            // Limit keysPressed array to prevent memory leak
+            if (gameState.keysPressed.length > MAX_KEYPRESSES) {
+                gameState.keysPressed = gameState.keysPressed.slice(-MAX_KEYPRESSES);
+            }
+            
+            // Escape to pause
+            if (e.key === 'Escape') {
+                togglePause();
+                return;
+            }
+            
+            // Use uppercase for comparison/display so players don't need Shift
+            const key = e.key.toUpperCase();
+            
+            // Update typing buffer with uppercase character
+            gameState.typingBuffer.current += key;
+            gameState.typingBuffer.lastKeyTime = Date.now();
+            
+            // Check if buffer matches any targets
+            let hit = false;
+            
+            // Check seeds first
+            for (let i = 0; i < gameState.seeds.length; i++) {
+                const seed = gameState.seeds[i];
+                if (seed.key === gameState.typingBuffer.current) {
+                    // Complete match for seed
+                    handleSeedHit(seed, i);
+                    hit = true;
+                    break;
+                }
+            }
+            
+            // If no seed hit, check bad guys
+            if (!hit) {
+                for (let i = 0; i < gameState.badGuys.length; i++) {
+                    const bg = gameState.badGuys[i];
+                    if (bg.label === gameState.typingBuffer.current) {
+                        // Complete match for bad guy
+                        handleBadGuyHit(bg, i);
+                        hit = true;
+                        break;
+                    }
+                }
+            }
+            
+            // If no complete match but partial match exists, keep buffer
+            if (!hit) {
+                let partialMatch = false;
+                
+                // Check for partial seed matches
+                for (const seed of gameState.seeds) {
+                    if (seed.key.startsWith(gameState.typingBuffer.current)) {
+                        partialMatch = true;
+                        break;
+                    }
+                }
+                
+                // Check for partial bad guy matches
+                if (!partialMatch) {
+                    for (const bg of gameState.badGuys) {
+                        if (bg.label.startsWith(gameState.typingBuffer.current)) {
+                            partialMatch = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // If no partial match, it's a miss
+                if (!partialMatch) {
+                    handleMiss();
+                }
+            }
+        });
+
+        function handleSeedHit(seed, index) {
+            // Hit: jump to seed
+            jumpToTarget(seed.x, seed.y, seed.special);
+            gameState.player.score += seed.special ? 50 : 10;
+            
+            // Apply combo bonus
+            gameState.combo++;
+            gameState.comboDecayTime = COMBO_DECAY_TIME; // Reset combo timer
+            
+            if (gameState.combo > 1) {
+                gameState.player.score += gameState.combo;
+            }
+            
+            // Update max combo if current combo is higher
+            if (gameState.combo > gameState.maxCombo) {
+                gameState.maxCombo = gameState.combo;
+            }
+            
+            // Show combo message
+            if (gameState.combo >= 3) {
+                createMessage(`Combo x${gameState.combo}!`, seed.x, seed.y - 30, 'gold', 14 + Math.min(gameState.combo, 10));
+            }
+            
+            gameState.progress = Math.min(gameState.seedsPerLevel, gameState.progress + 1);
+            gameState.stats.accuracy.correct++;
+            gameState.stats.accuracy.total++;
+            gameState.stats.seedsEaten++;
+            
+            // Increase speed by 10%
+            gameState.fallSpeedMultiplier = Math.min(3.0, gameState.fallSpeedMultiplier * 1.1);
+            createMessage('Speed ↑', CANVAS_WIDTH - 100, 50, 'lime', 12, 1);
+            
+            // Create particles
+            createParticles(seed.x, seed.y, seed.special ? 'gold' : '#8B4513', seed.special ? 20 : 10);
+            
+            // Show score message
+            createMessage(`+${seed.special ? 50 : 10}`, seed.x, seed.y - 20, seed.special ? 'gold' : 'white');
+            
+            playSound('jump');
+            gameState.seeds.splice(index, 1);
+            
+            // Clear typing buffer
+            gameState.typingBuffer.current = '';
+        }
+
+        function handleBadGuyHit(badGuy, index) {
+            // Stomp: jump to bad guy
+            jumpToTarget(badGuy.x, badGuy.y, false);
+            gameState.player.score += 20;
+            gameState.stats.accuracy.correct++;
+            gameState.stats.accuracy.total++;
+            gameState.stats.badGuysStomped++;
+            
+            // Apply combo bonus
+            gameState.combo++;
+            gameState.comboDecayTime = COMBO_DECAY_TIME; // Reset combo timer
+            
+            // Update max combo if current combo is higher
+            if (gameState.combo > gameState.maxCombo) {
+                gameState.maxCombo = gameState.combo;
+            }
+            
+            // Show combo message
+            if (gameState.combo >= 3) {
+                createMessage(`Combo x${gameState.combo}!`, badGuy.x, badGuy.y - 30, 'gold', 14 + Math.min(gameState.combo, 10));
+            }
+            
+            // Increase speed by 10%
+            gameState.fallSpeedMultiplier = Math.min(3.0, gameState.fallSpeedMultiplier * 1.1);
+            createMessage('Speed ↑', CANVAS_WIDTH - 100, 50, 'lime', 12, 1);
+            
+            // Create particles
+            createParticles(badGuy.x, badGuy.y, 'red', 15);
+            
+            // Show score message
+            createMessage('+20', badGuy.x, badGuy.y - 20, 'white');
+            
+            playSound('stomp');
+            gameState.badGuys.splice(index, 1);
+            
+            // Clear typing buffer
+            gameState.typingBuffer.current = '';
+        }
+
+        function handleMiss() {
+            // Miss: buzzer
+            playSound('miss');
+            gameState.combo = 0; // Reset combo
+            gameState.comboDecayTime = 0; // Reset combo timer
+            shakeCapybara(3, 0.2);
+            createMessage('Wrong!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, 'red', 20, 1, false);
+            
+            // Decrease speed by 5%
+            gameState.fallSpeedMultiplier = Math.max(0.5, gameState.fallSpeedMultiplier * 0.95);
+            createMessage('Speed ↓', CANVAS_WIDTH - 100, 50, 'red', 12, 1);
+            
+            // Clear typing buffer
+            gameState.typingBuffer.current = '';
+            
+            // Count as miss for accuracy
+            gameState.stats.accuracy.total++;
+        }
+
+        function togglePause() {
+            gameState.isPaused = !gameState.isPaused;
+            if (!gameState.isPaused) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function jumpToTarget(tx, ty, special) {
+            gameState.player.targetX = tx;
+            gameState.player.vy = special ? -15 : -10;
+            gameState.player.isJumping = true;
+            
+            // Create jump particles
+            createParticles(gameState.player.x, gameState.player.y + 20, '#8B4513', 5);
+        }
+
+        // Helper Functions
+        function getMaxSeedsOnScreen() {
+            return 1; // One at a time for better gameplay
+        }
+
+        function getRandomKey() {
+            // Random from all letters/symbols based on level
+            let keys;
+            
+            if (gameState.currentLevel >= 17) {
+                keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-={}[]|\\:;"\'<>,.?/'.split('');
+            } else if (gameState.currentLevel >= 15) {
+                keys = '!@#$%^&*()_+-={}[]|\\:;"\'<>,.?/'.split('');
+            } else if (gameState.currentLevel >= 14) {
+                keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'.split('');
+            } else {
+                keys = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            }
+            
+            return keys[Math.floor(Math.random() * keys.length)];
+        }
+
+        function getSpecialSymbol() {
+            return ['!', '@', '#'][Math.floor(Math.random() * 3)];
+        }
+
+        function calculateAccuracy() {
+            if (gameState.stats.accuracy.total === 0) return 100;
+            return Math.round((gameState.stats.accuracy.correct / gameState.stats.accuracy.total) * 100);
+        }
+
+        function calculateWPM() {
+            const timeElapsed = (Date.now() - gameState.startTime) / 60000; // minutes
+            if (timeElapsed < 0.1) return 0; // Avoid division by near-zero
+            
+            // Count actual keypresses
+            return Math.round((gameState.stats.accuracy.correct / 5) / timeElapsed); // Approx 5 chars per word
+        }
+
+        function playSound(name) {
+            if (!gameState.soundEnabled) return;
+            
+            // Simple sound effects using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            switch(name) {
+                case 'jump':
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(800, audioContext.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                    
+                case 'stomp':
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                    
+                case 'miss':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                    
+                case 'win':
+                    // Happy ascending notes
+                    const notes = [400, 500, 600, 700, 800];
+                    notes.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.1);
+                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.1);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.1 + 0.3);
+                        
+                        osc.start(audioContext.currentTime + i * 0.1);
+                        osc.stop(audioContext.currentTime + i * 0.1 + 0.3);
+                    });
+                    break;
+                    
+                case 'gameover':
+                    // Sad descending notes
+                    const sadNotes = [400, 350, 300, 250, 200];
+                    sadNotes.forEach((freq, i) => {
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, audioContext.currentTime + i * 0.15);
+                        gain.gain.setValueAtTime(0.2, audioContext.currentTime + i * 0.15);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.3);
+                        
+                        osc.start(audioContext.currentTime + i * 0.15);
+                        osc.stop(audioContext.currentTime + i * 0.15 + 0.3);
+                    });
+                    break;
+            }
+        }
+
+        function levelComplete() {
+            gameState.isPaused = true;
+            
+            // Unlock next level if needed
+            if (gameState.currentLevel + 1 > gameState.unlockedLevels && gameState.currentLevel < LEVEL_BLOCKS.length) {
+                gameState.unlockedLevels = gameState.currentLevel + 1;
+            }
+            
+            // Update high score
+            gameState.highScores[gameState.currentLevel] = Math.max(
+                gameState.highScores[gameState.currentLevel] || 0,
+                gameState.player.score
+            );
+            
+            // Update stats
+            gameState.stats.wpm = calculateWPM();
+
+            // Remember last completed level
+            gameState.lastCompletedLevel = gameState.currentLevel;
+            saveProgress();
+            
+            playSound('win');
+            showGameOver(true); // Win variant
+        }
+
+        function gameOver() {
+            gameState.isGameOver = true;
+            gameState.stats.wpm = calculateWPM();
+            saveProgress();
+            
+            playSound('gameover');
+            showGameOver(false);
+        }
+
+        function showGameOver(isWin) {
+            console.log("showGameOver called");
+            document.getElementById('game-over-title').innerText = isWin ? 'Level Complete!' : 'Game Over';
+            document.getElementById('final-score').innerHTML = `
+                Score: ${gameState.player.score}<br>
+                WPM: ${gameState.stats.wpm}<br>
+                Accuracy: ${calculateAccuracy()}%<br>
+                Max Combo: ${gameState.maxCombo}x<br>
+                Seeds Eaten: ${gameState.stats.seedsEaten}<br>
+                Enemies Stomped: ${gameState.stats.badGuysStomped}
+            `;
+            
+            // Show continue button only on win
+            document.getElementById('continue-btn').classList.toggle('hidden', !isWin);
+            
+            document.getElementById('game-over').classList.remove('hidden');
+            document.getElementById('exit-button').classList.add('hidden');
+        }
+
+        // Menu/Stats Handlers
+        function resetGame() {
+            gameState.player = {
+                x: CENTER_X,
+                y: GROUND_Y,
+                vy: 0,
+                targetX: null,
+                targetY: null,
+                isJumping: false,
+                scale: 1,
+                health: 5,
+                score: 0,
+                shake: { x: 0, y: 0, intensity: 0, duration: 0 } // Capybara shake
+            };
+            gameState.seeds = [];
+            gameState.badGuys = [];
+            gameState.particles = [];
+            gameState.messages = [];
+            gameState.combo = 0;
+            gameState.maxCombo = 0;
+            gameState.progress = 0;
+            gameState.isPaused = false;
+            gameState.isGameOver = false;
+            gameState.keysPressed = [];
+            gameState.startTime = Date.now();
+            gameState.shake = { intensity: 0, duration: 0, x: 0, y: 0 };
+            gameState.typingBuffer = { current: '', lastKeyTime: 0, activeTarget: null };
+            gameState.nextSpawnTime = 0;
+            gameState.fallSpeedMultiplier = 1.0; // Reset speed
+            gameState.comboDecayTime = 0;
+            
+            // Generate new background
+            gameState.backgroundSeed = Math.random();
+            
+            // Generate level data
+            gameState.levelData = generateLevelData(gameState.currentLevel, gameState.seedsPerLevel);
+            
+            document.getElementById('menu').classList.add('hidden');
+            document.getElementById('game-over').classList.add('hidden');
+            document.getElementById('exit-button').classList.remove('hidden');
+            
+            // Start game loop
+            lastFrameTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            // Read options
+            gameState.mode = document.getElementById('mode-select').value;
+            gameState.seedsPerLevel = parseInt(document.getElementById('seeds-select').value);
+gameState.capyColor = document.getElementById('color-select').value;
+gameState.soundEnabled = document.getElementById('sound-toggle').checked;
+
+if (gameState.mode === 'select') {
+    gameState.currentLevel = parseInt(document.getElementById('level-select').value);
+} else {
+    // Start from the level after the last one successfully completed
+    gameState.currentLevel = Math.min(
+        (gameState.lastCompletedLevel || 0) + 1,
+        LEVEL_BLOCKS.length
+    );
+    if (gameState.currentLevel === 0) gameState.currentLevel = 1;
+}
+
+resetGame();
+}
+
+function quickPlay() {
+    // Defaults
+    gameState.mode = 'progressive';
+    gameState.seedsPerLevel = 30;
+    gameState.capyColor = 'brown';
+    gameState.soundEnabled = true;
+
+    // Choose a random level between 10 and the highest unlocked (min 10)
+    const minLvl = 10;
+    const maxLvl = Math.max(minLvl, gameState.unlockedLevels);
+    gameState.currentLevel = Math.floor(Math.random() * (maxLvl - minLvl + 1)) + minLvl;
+    
+    console.log('Quick Play Level:', gameState.currentLevel); // Debug
+    
+    resetGame();
+}
+
+function showStats() {
+    const statsContent = document.getElementById('stats-content');
+    
+    // Format high scores
+    let highScoresHtml = '';
+    for (const level in gameState.highScores) {
+        highScoresHtml += `Level ${level}: ${gameState.highScores[level]}<br>`;
+    }
+    
+    statsContent.innerHTML = `
+        <strong>Typing Stats:</strong><br>
+        WPM: ${gameState.stats.wpm}<br>
+        Accuracy: ${calculateAccuracy()}%<br>
+        Best Combo: ${gameState.maxCombo}x<br>
+        Seeds Eaten: ${gameState.stats.seedsEaten}<br>
+        Enemies Stomped: ${gameState.stats.badGuysStomped}<br><br>
+        
+        <strong>Unlocked Levels:</strong> ${gameState.unlockedLevels} / ${LEVEL_BLOCKS.length}<br><br>
+        
+        <strong>High Scores:</strong><br>
+        ${highScoresHtml || 'No high scores yet!'}
+    `;
+    
+    document.getElementById('menu').classList.add('hidden');
+    document.getElementById('stats').classList.remove('hidden');
+}
+
+/* ------------------------------------------------------------------
+   Attach UI listeners only once DOM is ready – avoids race-conditions
+------------------------------------------------------------------ */
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM ready – attaching UI listeners');
+    document.getElementById('start-btn').addEventListener('click', () => {
+        console.log('Start button clicked');
+        startGame();
+    });
+    document.getElementById('quick-play-btn').addEventListener('click', () => {
+        console.log('Quick-play button clicked');
+        quickPlay();
+    });
+    document.getElementById('view-stats-btn').addEventListener('click', showStats);
+    document.getElementById('back-to-menu-stats').addEventListener('click', () => {
+        document.getElementById('stats').classList.add('hidden');
+        document.getElementById('menu').classList.remove('hidden');
+    });
+    document.getElementById('reset-stats').addEventListener('click', resetStats);
+    document.getElementById('restart-btn').addEventListener('click', startGame);
+    document.getElementById('back-to-menu').addEventListener('click', () => {
+        document.getElementById('game-over').classList.add('hidden');
+        document.getElementById('menu').classList.remove('hidden');
+        document.getElementById('exit-button').classList.add('hidden');
+    });
+    document.getElementById('continue-btn').addEventListener('click', () => {
+        gameState.currentLevel++;
+        startGame();
+    });
+    document.getElementById('mode-select').addEventListener('change', (e) => {
+        document.getElementById('level-select-label')
+                .classList.toggle('hidden', e.target.value !== 'select');
+    });
+    document.getElementById('exit-button').addEventListener('click', () => {
+        document.getElementById('menu').classList.remove('hidden');
+        document.getElementById('exit-button').classList.add('hidden');
+        gameState.isPaused = true;
+    });
+
+    // Initial asset / progress load **after** listeners are ready
+    loadAssets();
+    loadProgress();
+});
+    </script>
+</body>
+</html>
