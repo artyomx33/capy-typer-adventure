@@ -1919,5 +1919,70 @@ document.addEventListener('DOMContentLoaded', () => {
     loadProgress();
 });
     </script>
+
+    <!-- Universal Typing UI (desktop & mobile) -->
+    <script>
+    (function () {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'typing-field';
+        input.placeholder = 'TYPE HERE';
+        Object.assign(input, {
+            autocomplete: 'off',
+            autocapitalize: 'off',
+            autocorrect: 'off',
+            spellcheck: false
+        });
+        input.style.cssText =
+          'position:fixed;top:45px;left:50%;transform:translateX(-50%);' +
+          'width:200px;height:30px;font-family:\"Press Start 2P\",monospace;' +
+          'font-size:10px;text-align:center;background:rgba(0,0,0,0.8);' +
+          'color:white;border:2px solid #FFD700;padding:6px;z-index:9999;display:none;';
+
+        const btn = document.createElement('div');
+        btn.id = 'typing-btn';
+        btn.textContent = 'CLICK TO TYPE';
+        btn.style.cssText =
+          'position:fixed;top:10px;left:50%;transform:translateX(-50%);' +
+          'font-family:\"Press Start 2P\",monospace;background:#FFD700;color:#222;' +
+          'padding:8px 16px;font-size:12px;border:2px solid #8B4513;' +
+          'border-radius:6px;z-index:9999;cursor:pointer;';
+
+        document.body.append(input, btn);
+
+        btn.addEventListener('click', () => {
+            btn.style.display = 'none';
+            input.style.display = 'block';
+            input.focus();
+        });
+        input.addEventListener('blur', () => {
+            input.style.display = 'none';
+            btn.style.display = 'block';
+        });
+
+        input.addEventListener('input', e => {
+            const v = e.target.value.toUpperCase();
+            const gs = window.gameState;
+            if (!gs) return;
+            gs.typingBuffer.current = v;
+            gs.typingBuffer.lastKeyTime = Date.now();
+
+            for (let i = gs.seeds.length - 1; i >= 0; i--) {
+                if (gs.seeds[i].key === v) {
+                    handleSeedHit(gs.seeds[i], i);
+                    e.target.value = '';
+                    return;
+                }
+            }
+            for (let i = gs.badGuys.length - 1; i >= 0; i--) {
+                if (gs.badGuys[i].label === v) {
+                    handleBadGuyHit(gs.badGuys[i], i);
+                    e.target.value = '';
+                    return;
+                }
+            }
+        });
+    })();
+    </script>
 </body>
 </html>
